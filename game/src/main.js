@@ -472,6 +472,16 @@ function stageShot(name) {
     player.speed = 18;
     police.setWanted(3);
     for (let i = 0; i < 4; i += 1) police.step(STEP, playerPos(), 18, null);
+    // Park the cruisers where the camera can see them: two ahead closing in,
+    // two flanking behind, so the chase reads at a glance.
+    const offsets = [[-11, 30], [12, 36], [-22, -18], [20, -25]];
+    police.cruisers.forEach((cruiser, i) => {
+      const [ox, oz] = offsets[i % offsets.length];
+      cruiser.mesh.position.set(car.mesh.position.x + ox, 0, car.mesh.position.z + oz);
+      cruiser.heading = Math.atan2(-ox, -oz);
+      cruiser.mesh.rotation.y = cruiser.heading;
+      cruiser.speed = 6;
+    });
     camYaw = 0;
     updateCamera(STEP);
     missions.startMission(1);
