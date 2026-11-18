@@ -31,11 +31,15 @@ export function createHud() {
     healthFill.style.background = state.health > 50
       ? 'linear-gradient(90deg, #37d67a, #9be15d)'
       : state.health > 25 ? 'linear-gradient(90deg, #f2c230, #f28c30)' : 'linear-gradient(90deg, #e5534b, #f28c30)';
-    let stars = '';
-    for (let i = 0; i < 5; i += 1) {
-      stars += `<span class="${i < state.wanted ? 'lit' : ''}">★</span>`;
+    if (state.wanted === 0) {
+      wantedEl.innerHTML = '<span style="color:#8fa8c8">— no heat —</span>';
+    } else {
+      let stars = '';
+      for (let i = 0; i < 5; i += 1) {
+        stars += `<span class="${i < state.wanted ? 'lit' : ''}">★</span>`;
+      }
+      wantedEl.innerHTML = stars;
     }
-    wantedEl.innerHTML = stars || '<span style="color:#8fa8c8">— no heat —</span>';
     objTitle.textContent = state.objective.title;
     objText.textContent = state.objective.text;
     objDist.textContent = state.objective.dist || '';

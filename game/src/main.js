@@ -274,8 +274,8 @@ function updateCamera(dt) {
   const pos = playerPos();
   const heading = playerCar ? playerCar.heading : player.heading;
   const camHeading = camYaw;
-  const dist = playerCar ? 12 : 9;
-  const height = playerCar ? 5 : 4.2;
+  const dist = playerCar ? 14 : 10;
+  const height = playerCar ? 6.5 : 5;
   const tx = pos.x - Math.sin(camHeading) * dist;
   const tz = pos.z - Math.cos(camHeading) * dist;
   camera.position.set(tx, height, tz);
