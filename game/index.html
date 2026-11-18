@@ -3,16 +3,98 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Block Dodger</title>
+<title>Solmar Bay — Open World Crime</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #11141b; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1e33; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
   #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-  /* Read aloud, never shown: the status line screen readers announce. */
+  #hud { position: fixed; inset: 0; pointer-events: none; color: #fff; z-index: 5; }
+  .panel { background: rgba(8, 18, 32, 0.62); border: 1px solid rgba(255,255,255,0.22); border-radius: 10px; backdrop-filter: blur(2px); }
+  #topleft { position: absolute; top: 14px; left: 14px; padding: 10px 14px; min-width: 240px; }
+  #healthbar { height: 12px; background: rgba(255,255,255,0.18); border-radius: 6px; overflow: hidden; margin: 6px 0 4px; }
+  #healthfill { height: 100%; width: 100%; background: linear-gradient(90deg, #37d67a, #9be15d); }
+  #cash { font-size: 22px; font-weight: 800; color: #7dff9b; text-shadow: 0 1px 3px #000; }
+  #wanted { font-size: 22px; letter-spacing: 3px; color: #ffb02e; text-shadow: 0 0 8px rgba(255,60,60,0.8); }
+  #wanted .lit { color: #ff3b30; }
+  #objective { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); padding: 9px 18px; text-align: center; max-width: 46vw; }
+  #objective b { color: #ffd34d; }
+  #objective small { display: block; color: #cfe3ff; font-size: 12px; margin-top: 2px; }
+  #speedo { position: absolute; right: 16px; bottom: 150px; padding: 8px 14px; font-size: 20px; font-weight: 800; text-align: right; }
+  #speedo small { display: block; font-size: 11px; color: #cfe3ff; font-weight: 600; }
+  #minimap { position: absolute; right: 14px; bottom: 14px; border: 2px solid rgba(255,255,255,0.35); border-radius: 50%; background: rgba(10, 24, 40, 0.85); }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; display: none; }
+  #crosshair:before, #crosshair:after { content: ""; position: absolute; background: #fff; box-shadow: 0 0 4px #000; }
+  #crosshair:before { left: 8px; top: 0; width: 2px; height: 18px; }
+  #crosshair:after { left: 0; top: 8px; width: 18px; height: 2px; }
+  #hint { position: absolute; left: 14px; bottom: 14px; padding: 8px 12px; font-size: 13px; color: #dfeaff; max-width: 330px; line-height: 1.5; }
+  #toast { position: absolute; left: 50%; bottom: 110px; transform: translateX(-50%); padding: 10px 20px; font-size: 17px; font-weight: 700; color: #ffe9a8; display: none; }
+  .screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; background: linear-gradient(160deg, rgba(6,24,48,0.88), rgba(10,60,90,0.72)); color: #fff; text-align: center; }
+  .screen .card { max-width: 620px; padding: 34px 40px; background: rgba(5,16,30,0.78); border: 1px solid rgba(255,255,255,0.25); border-radius: 16px; }
+  .screen h1 { margin: 0 0 4px; font-size: 52px; letter-spacing: 2px; color: #ffb02e; text-shadow: 0 3px 0 #b3541e, 0 6px 18px #000; }
+  .screen h2 { margin: 0 0 14px; font-size: 17px; letter-spacing: 6px; color: #7dd3fc; text-transform: uppercase; }
+  .screen p { line-height: 1.55; color: #dcebfb; }
+  .screen .keys { text-align: left; font-size: 13.5px; line-height: 1.8; color: #cfe0f5; margin: 12px auto; display: inline-block; }
+  .screen button { pointer-events: auto; cursor: pointer; margin: 6px; padding: 13px 30px; font-size: 17px; font-weight: 800; color: #082033; background: #ffb02e; border: none; border-radius: 10px; }
+  .screen button.alt { background: #e5eefb; }
+  .screen button:hover { filter: brightness(1.1); }
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
 </head>
 <body>
-<canvas id="game" aria-label="Block Dodger: move the paddle left and right to dodge falling blocks and catch coins"></canvas>
+<canvas id="game" aria-label="Solmar Bay: open world crime game. Drive, steal cars, do missions and dodge the police."></canvas>
+<div id="hud">
+  <div id="topleft" class="panel">
+    <div id="cash">$0</div>
+    <div id="healthbar"><div id="healthfill"></div></div>
+    <div id="wanted"></div>
+  </div>
+  <div id="objective" class="panel"><b id="objTitle">Solmar Bay</b><span id="objText">Explore the city</span><small id="objDist"></small></div>
+  <div id="speedo" class="panel"><span id="speedVal">0</span> km/h<small id="carName">On foot</small></div>
+  <canvas id="minimap" width="180" height="180"></canvas>
+  <div id="crosshair"></div>
+  <div id="hint" class="panel">W A S D move &nbsp;·&nbsp; E enter / steal car &nbsp;·&nbsp; Click shoot &nbsp;·&nbsp; V punch &nbsp;·&nbsp; Shift run &nbsp;·&nbsp; P pause &nbsp;·&nbsp; M mute</div>
+  <div id="toast" class="panel"></div>
+</div>
+<div id="screen-start" class="screen">
+  <div class="card">
+    <h1>SOLMAR BAY</h1>
+    <h2>Open World Crime</h2>
+    <p>You are <b>Rex Marlowe</b>, a driver for hire in the sun-soaked coastal city of Solmar Bay.
+    The docks, the hotels and the harbour all owe somebody money — and you are the somebody who
+    collects. Steal cars, run missions for the crew, and stay one step ahead of the Solmar Bay PD.</p>
+    <div class="keys">
+      <b>W A S D</b> — move / drive &nbsp; <b>Mouse drag</b> — look around<br>
+      <b>E</b> — enter or steal a car &nbsp; <b>Click</b> — shoot &nbsp; <b>V</b> — punch<br>
+      <b>Shift</b> — run &nbsp; <b>P</b> — pause &amp; save &nbsp; <b>M</b> — mute
+    </div>
+    <div>
+      <button id="btn-start">Start the story</button>
+      <button id="btn-continue" class="alt">Continue saved game</button>
+    </div>
+    <p style="font-size:12px;color:#9fb6d4">An original game. No characters, places or art from any commercial game. Sound is generated live with WebAudio.</p>
+  </div>
+</div>
+<div id="screen-pause" class="screen" style="display:none">
+  <div class="card">
+    <h1 style="font-size:38px">PAUSED</h1>
+    <p id="pause-stats">Take a breath, Rex. The city waits.</p>
+    <div>
+      <button id="btn-resume">Resume</button>
+      <button id="btn-save" class="alt">Save game</button>
+      <button id="btn-load" class="alt">Load save</button>
+      <button id="btn-quit" class="alt">Quit to title</button>
+    </div>
+  </div>
+</div>
+<div id="screen-over" class="screen" style="display:none">
+  <div class="card">
+    <h1 style="font-size:38px;color:#ff6b5e">WASTED</h1>
+    <p id="over-text">The Solmar Bay PD got you this time.</p>
+    <div><button id="btn-retry">Try again</button><button id="btn-over-title" class="alt">Title screen</button></div>
+  </div>
+</div>
 <p id="status" role="status" aria-live="polite"></p>
 <script type="module" src="./src/main.js"></script>
 </body>

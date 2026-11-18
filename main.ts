@@ -9,6 +9,8 @@
 // put your 3 or 4 PNG or JPEG screenshots in screenshots/ (the first by name is the cover) and run it.
 //
 // Serve it locally with `node serve.ts`, then open http://localhost:8080.
+// Built by the recorded agent session for the gta6-01 bounty: Solmar Bay, an original
+// open-world crime game (three.js vendored under game/vendor, screenshots in shots.json).
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
