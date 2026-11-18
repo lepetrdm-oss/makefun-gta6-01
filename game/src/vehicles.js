@@ -6,7 +6,7 @@ import { CAR, CAR_MODELS, CITY } from './config.js';
 
 export function makeCarMesh(model, isPolice) {
   const group = new THREE.Group();
-  const bodyColor = isPolice ? 0x1c2f4a : model.color;
+  const bodyColor = isPolice ? 0x33517e : model.color;
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(2.0, 0.62, 4.4),
     new THREE.MeshLambertMaterial({ color: bodyColor }),

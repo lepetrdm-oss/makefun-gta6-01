@@ -472,15 +472,25 @@ function stageShot(name) {
     player.speed = 18;
     police.setWanted(3);
     for (let i = 0; i < 4; i += 1) police.step(STEP, playerPos(), 18, null);
-    // Park the cruisers where the camera can see them: two ahead closing in,
-    // two flanking behind, so the chase reads at a glance.
-    const offsets = [[-11, 30], [12, 36], [-22, -18], [20, -25]];
+    // Park the cruisers on the road where the camera can see them: two ahead
+    // closing in, two behind, so the chase reads at a glance.
+    const offsets = [[0, 26], [-2, 34], [3, -32], [-3, -40]];
     police.cruisers.forEach((cruiser, i) => {
       const [ox, oz] = offsets[i % offsets.length];
       cruiser.mesh.position.set(car.mesh.position.x + ox, 0, car.mesh.position.z + oz);
       cruiser.heading = Math.atan2(-ox, -oz);
       cruiser.mesh.rotation.y = cruiser.heading;
       cruiser.speed = 6;
+    });
+    // Two traffic cars ahead on the same road, so the street is alive.
+    const ahead = [[2, 24], [-3, 48]];
+    traffic.cars.slice(0, 2).forEach((trafficCar, i) => {
+      const [ox, oz] = ahead[i];
+      trafficCar.mesh.position.set(car.mesh.position.x + ox, 0, car.mesh.position.z + oz);
+      trafficCar.heading = 0;
+      trafficCar.mesh.rotation.y = 0;
+      trafficCar.speed = 8;
+      trafficCar.targetSpeed = 8;
     });
     camYaw = 0;
     updateCamera(STEP);
